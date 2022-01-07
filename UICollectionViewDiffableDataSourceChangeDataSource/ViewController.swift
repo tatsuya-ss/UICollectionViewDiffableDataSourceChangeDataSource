@@ -7,6 +7,18 @@
 
 import UIKit
 
+enum SearchState {
+    case recommend
+    case result
+    
+    mutating func changeState() {
+        switch self {
+        case .recommend: self = .result
+        case .result: self = .recommend
+        }
+    }
+}
+
 final class ViewController: UIViewController {
 
     @IBOutlet private weak var collectionView: UICollectionView!
@@ -14,6 +26,7 @@ final class ViewController: UIViewController {
     private var dataSource: UICollectionViewDiffableDataSource<Int, Int>! = nil
     private var numbers: [[Int]] = [[1, 2, 3, 4, 5, 6],
                                     [7, 8, 9, 10, 11, 12]]
+    private var searchState: SearchState = .recommend
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,8 +34,29 @@ final class ViewController: UIViewController {
         configureDataSource()
     }
     
+    @IBAction func didTapRefreshButton(_ sender: Any) {
+        searchState.changeState()
+        collectionView.collectionViewLayout = createLayout()
+        configureDataSource()
+    }
+    
 }
 
+// MARK: - func
+extension ViewController {
+    
+    private func snapShot() {
+        var snapshot = NSDiffableDataSourceSnapshot<Int, Int>()
+        (0..<numbers.count).forEach {
+            snapshot.appendSections([$0])
+            snapshot.appendItems(numbers[$0])
+        }
+        dataSource.apply(snapshot, animatingDifferences: true)
+    }
+    
+}
+
+// MARK: - setup
 extension ViewController {
     
     private func setupCollectionView() {
@@ -58,27 +92,51 @@ extension ViewController {
     
     private func createLayout() -> UICollectionViewLayout {
         let config = UICollectionViewCompositionalLayoutConfiguration()
-        
-        let layout = UICollectionViewCompositionalLayout(sectionProvider: { sectionIndex, layoutEnvironment -> NSCollectionLayoutSection in
-            let leadingItem = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                                                                        heightDimension: .fractionalHeight(1.0)))
-            leadingItem.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5)
-            let containerGroup = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.5),
-                                                                                                       heightDimension: .fractionalHeight(0.3)),
-                                                                    subitems: [leadingItem])
-            let section = NSCollectionLayoutSection(group: containerGroup)
-            section.orthogonalScrollingBehavior = .continuous
-            // MARK: Headerの処理
-            let sectionHeader = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
-                                                                                                               heightDimension: .estimated(44)),
-                                                                            elementKind: "header-element-kind",
-                                                                            alignment: .top)
-            section.boundarySupplementaryItems = [sectionHeader]
 
-            return section
-        }, configuration: config)
-        
-        return layout
+        switch searchState {
+        case .recommend:
+            let layout = UICollectionViewCompositionalLayout(sectionProvider: { sectionIndex, layoutEnvironment -> NSCollectionLayoutSection in
+                let leadingItem = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                                                            heightDimension: .fractionalHeight(1.0)))
+                leadingItem.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5)
+                let containerGroup = NSCollectionLayoutGroup.horizontal(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(0.5),
+                                                                                                           heightDimension: .fractionalHeight(0.3)),
+                                                                        subitems: [leadingItem])
+                let section = NSCollectionLayoutSection(group: containerGroup)
+                section.orthogonalScrollingBehavior = .continuous
+                // MARK: Headerの処理
+                let sectionHeader = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                                                                                   heightDimension: .estimated(44)),
+                                                                                elementKind: "header-element-kind",
+                                                                                alignment: .top)
+                section.boundarySupplementaryItems = [sectionHeader]
+
+                return section
+            }, configuration: config)
+            
+            return layout
+
+        case .result:
+            let layout = UICollectionViewCompositionalLayout(sectionProvider: { sectionIndex, layoutEnvironment -> NSCollectionLayoutSection in
+                let leadingItem = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                                                            heightDimension: .fractionalHeight(1.0)))
+                leadingItem.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 5, bottom: 5, trailing: 5)
+                let containerGroup = NSCollectionLayoutGroup.vertical(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                                                                           heightDimension: .fractionalHeight(0.1)),
+                                                                        subitems: [leadingItem])
+                let section = NSCollectionLayoutSection(group: containerGroup)
+                // MARK: Headerの処理
+                let sectionHeader = NSCollectionLayoutBoundarySupplementaryItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0),
+                                                                                                                   heightDimension: .estimated(44)),
+                                                                                elementKind: "header-element-kind",
+                                                                                alignment: .top)
+                section.boundarySupplementaryItems = [sectionHeader]
+
+                return section
+            }, configuration: config)
+            
+            return layout
+        }
     }
     
 }
