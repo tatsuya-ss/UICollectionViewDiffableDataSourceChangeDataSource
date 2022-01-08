@@ -26,7 +26,7 @@ final class ViewController: UIViewController {
     private var dataSource: UICollectionViewDiffableDataSource<Int, Int>! = nil
     private var numbers: [[Int]] = [[1, 2, 3, 4, 5, 6],
                                     [7, 8, 9, 10, 11, 12]]
-    private var header = ["A", "B"]
+    private var names = [189, 3, 35, 52, 523, 252, 25, 235, 45, 646, 645, 745]
     private var searchState: SearchState = .recommend
     
     override func viewDidLoad() {
@@ -61,7 +61,7 @@ extension ViewController {
         
         // MARK: Headerの作成
         let supplementaryRegistration = UICollectionView.SupplementaryRegistration<CollectionViewHeaderTitle>(elementKind: "header-element-kind") { supplementaryView, elementKind, indexPath in
-            supplementaryView.label.text = self.header[indexPath.section]
+            supplementaryView.label.text = String(indexPath.section)
             supplementaryView.label.textColor = .white
             supplementaryView.label.font = .boldSystemFont(ofSize: 20)
         }
@@ -70,9 +70,15 @@ extension ViewController {
         }
         
         var snapshot = NSDiffableDataSourceSnapshot<Int, Int>()
-        (0..<numbers.count).forEach {
-            snapshot.appendSections([$0])
-            snapshot.appendItems(numbers[$0])
+        switch searchState {
+        case .recommend:
+            (0..<numbers.count).forEach {
+                snapshot.appendSections([$0])
+                snapshot.appendItems(numbers[$0])
+            }
+        case .result:
+            snapshot.appendSections([0])
+            snapshot.appendItems(names)
         }
         dataSource.apply(snapshot, animatingDifferences: true)
     }
