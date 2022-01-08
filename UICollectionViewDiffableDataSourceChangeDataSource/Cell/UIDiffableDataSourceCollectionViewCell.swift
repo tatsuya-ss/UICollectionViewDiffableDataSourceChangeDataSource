@@ -16,7 +16,7 @@ final class UIDiffableDataSourceCollectionViewCell: UICollectionViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        
+        layer.cornerRadius = 10
     }
     
     func configure(number: Int) {
